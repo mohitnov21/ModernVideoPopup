@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <array name="progressLoader">
+
+        <item>#ffff0000</item>
+        <item>#ff0099cc</item>
+        <item>#aaa</item>
+
+    </array>
+
+</resources>

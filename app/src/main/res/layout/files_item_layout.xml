@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/video_click"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:background="@android:color/transparent"
+    android:padding="10dp">
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_weight="0.2"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/imageview_files"
+            android:src="@drawable/ic_launcher_background"
+            android:scaleType="fitXY"
+            android:layout_width="match_parent"
+            android:layout_height="50dp" />
+         <TextView
+             android:id="@+id/duration_textview_files"
+             android:layout_gravity="bottom|end"
+             android:layout_margin="3dp"
+             android:layout_width="40dp"
+             android:gravity="center"
+             android:textSize="10dp"
+             android:background="@color/colorPrimaryDark"
+             android:textColor="@android:color/white"
+             android:maxLines="1"
+             android:singleLine="true"
+             android:text="@string/app_name"
+             android:layout_height="20dp" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_marginLeft="15dp"
+        android:layout_width="0dp"
+        android:layout_weight="0.7"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/video_name"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:maxLines="3"
+            android:gravity="center_vertical"
+            android:text="@string/app_name"
+            android:textColor="@android:color/white"
+            android:textSize="16dp" />
+
+        <TextView
+            android:id="@+id/date_files"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginBottom="5dp"
+            android:text=""
+            android:gravity="center_vertical"
+            android:textColor="@android:color/white"
+            android:textSize="12dp" />
+
+    </LinearLayout>
+    <ImageButton
+        android:id="@+id/more_option_files"
+        android:layout_width="0dp"
+        android:layout_gravity="center"
+        android:layout_weight="0.1"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_more_vert_black_24dp"
+        android:layout_height="30dp" />
+</LinearLayout>

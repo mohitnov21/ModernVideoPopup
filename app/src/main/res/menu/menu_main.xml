@@ -1,0 +1,29 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="comi.example.modern.modernvideopopup.MainActivity">
+    <item
+        android:id="@+id/action_viewtype"
+        android:icon="@drawable/ic_grid_on_white_24dp"
+        android:orderInCategory="100"
+        android:title="@string/viewtype"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_morre"
+        android:icon="@drawable/ic_more_vert_black_24dp"
+        android:orderInCategory="100"
+        android:title="@string/View"
+        app:showAsAction="never">
+        <menu>
+
+            <item
+                android:id="@+id/folders"
+                android:title="@string/folder_submenu" />
+
+            <item
+                android:id="@+id/videos"
+                android:title="@string/video_submenu" />
+
+        </menu>
+    </item>
+</menu>
