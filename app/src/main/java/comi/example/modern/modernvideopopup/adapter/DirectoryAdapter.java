@@ -10,10 +10,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import comi.example.modern.modernvideopopup.FilesActivity;
 import comi.example.modern.modernvideopopup.MainActivity;
 import comi.example.modern.modernvideopopup.ModernDirectory;
+import comi.example.modern.modernvideopopup.ModernFiles;
 import comi.example.modern.modernvideopopup.R;
 
 /**
@@ -25,6 +27,7 @@ public class DirectoryAdapter extends RecyclerView.Adapter<DirectoryAdapter.MyVi
     boolean isGridType;
     private MainActivity mainActivity;
     ArrayList<ModernDirectory> modernDirectories;
+    ArrayList<ModernDirectory> modernDirectoriesCopy;
     public DirectoryAdapter(MainActivity mainActivity, ArrayList<ModernDirectory> modernDirectories) {
         this.mainActivity = mainActivity;
         this.modernDirectories = modernDirectories;
@@ -35,8 +38,24 @@ public class DirectoryAdapter extends RecyclerView.Adapter<DirectoryAdapter.MyVi
     public DirectoryAdapter(MainActivity mainActivity, ArrayList<ModernDirectory> modernDirectories, boolean isGridType) {
         this.mainActivity = mainActivity;
         this.modernDirectories = modernDirectories;
+        modernDirectoriesCopy = new ArrayList<>();
+        modernDirectoriesCopy.addAll(modernDirectories);
         this.isGridType = isGridType;
 
+    }
+    public void filter(String charText) {
+        charText = charText.toLowerCase(Locale.getDefault());
+        modernDirectories.clear();
+        if (charText.length() == 0) {
+            modernDirectories.addAll(modernDirectoriesCopy);
+        } else {
+            for (ModernDirectory wp : modernDirectoriesCopy) {
+                if (wp.getName().toLowerCase(Locale.getDefault()).contains(charText)) {
+                    modernDirectories.add(wp);
+                }
+            }
+        }
+        notifyDataSetChanged();
     }
 
 
@@ -71,9 +90,15 @@ public class DirectoryAdapter extends RecyclerView.Adapter<DirectoryAdapter.MyVi
             @Override
             public void onClick(View v) {
                 Log.e("videocursor outside21", "count : " + modernDirectories.get(position).getInsideData().size() );
-                Intent intent = new Intent(mainActivity, FilesActivity.class);
-                intent.putExtra("index",position);
-                mainActivity.startActivity(intent);
+                for (int k = 0; k < modernDirectoriesCopy.size(); k++) {
+                    if (modernDirectories.get(position).getId().equals(modernDirectoriesCopy.get(k).getId())) {
+                        Intent intent = new Intent(mainActivity, FilesActivity.class);
+                        intent.putExtra("index",k);
+                        mainActivity.startActivity(intent);
+                        Log.e("matched", "directory location : " + k);
+                    }
+                }
+
             }
         });
     }

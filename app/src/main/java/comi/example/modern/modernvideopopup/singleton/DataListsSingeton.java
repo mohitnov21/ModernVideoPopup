@@ -18,7 +18,7 @@ public class DataListsSingeton  {
     // other instance variables can be here
     private ArrayList<ModernDirectory> modernDirectories ;
     private ArrayList<ModernFiles> videosFiles ;
-
+    private boolean DataLaoding = false;
     private DataListsSingeton() {};
     private int currentActivty=0;
     public static DataListsSingeton getInstance() {
@@ -50,5 +50,13 @@ public class DataListsSingeton  {
 
     public void setVideosFiles(ArrayList<ModernFiles> videosFiles) {
         this.videosFiles = videosFiles;
+    }
+
+    public boolean isDataLaoding() {
+        return DataLaoding;
+    }
+
+    public void setDataLaoding(boolean dataLaoding) {
+        DataLaoding = dataLaoding;
     }
 }

@@ -52,16 +52,17 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MyViewHolder
 
 
     public boolean showPopup;
+
     public FilesAdapter(Context mainActivity, int index) {
         this.mainActivity = mainActivity;
 
     }
 
-    public FilesAdapter(Context mainActivity, int index, ArrayList<ModernFiles> modernFiles,OnClickVideoListener onClickVideoListener,boolean isGridType) {
+    public FilesAdapter(Context mainActivity, int index, ArrayList<ModernFiles> modernFiles, OnClickVideoListener onClickVideoListener, boolean isGridType) {
         this.mainActivity = mainActivity;
         this.index = index;
         this.onClickVideoListener = onClickVideoListener;
-        Log.e("isisGridType",""+isGridType);
+        Log.e("isisGridType", "" + isGridType);
         this.isGridType = isGridType;
 
         this.modernFiles = modernFiles;
@@ -72,11 +73,10 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MyViewHolder
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view;
-        if(!isGridType) {
-             view = (View) LayoutInflater.from(parent.getContext())
+        if (!isGridType) {
+            view = (View) LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.files_item_layout, parent, false);
-        }else
-        {
+        } else {
             view = (View) LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.grid_viewtype, parent, false);
 
@@ -84,6 +84,7 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MyViewHolder
         MyViewHolder myViewHolder = new MyViewHolder(view);
         return myViewHolder;
     }
+
     public void filter(String charText) {
         charText = charText.toLowerCase(Locale.getDefault());
         modernFiles.clear();
@@ -98,21 +99,27 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MyViewHolder
         }
         notifyDataSetChanged();
     }
+
     @Override
     public void onBindViewHolder(MyViewHolder holder, final int position) {
-        if(isGridType)
-        {
+        if (isGridType) {
             holder.vidTitle.setText(modernFiles.get(position).getName());
             holder.vidDuration.setText(modernFiles.get(position).getDuration());
             Glide.with(mainActivity)
                     .load(modernFiles.get(position).getImg())
                     .centerCrop()
-                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .placeholder(R.drawable.vlx_icon)
                     .into(holder.vid_previewGrid);
             holder.linearLayoutVideo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onClickVideoListener.onClick(position);
+                    Log.e("modernFilesCopy.size()", "location : " + modernFilesCopy.size());
+                    for (int k = 0; k < modernFilesCopy.size(); k++) {
+                        if (modernFiles.get(position).getLocation().equals(modernFilesCopy.get(k).getLocation())) {
+                            onClickVideoListener.onClick(k);
+                            Log.e("matched", "location : " + k);
+                        }
+                    }
                     if (showPopup) {
                         Intent intent = new Intent(mainActivity, FloatingViewService.class);
                         intent.putExtra("index", position);
@@ -138,20 +145,25 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MyViewHolder
                 }
             });
 
-        }else {
+        } else {
             holder.video_name.setText(modernFiles.get(position).getName());
             holder.duration_textview_files.setText(modernFiles.get(position).getDuration());
             Glide.with(mainActivity)
                     .load(modernFiles.get(position).getImg())
                     .centerCrop()
-                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .placeholder(R.drawable.vlx_icon)
                     .into(holder.imageView);
 
             holder.date_files.setText("" + getFileSize(Long.parseLong(modernFiles.get(position).getDate())));
             holder.linearLayoutVideo.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    onClickVideoListener.onClick(position);
+                    for (int k = 0; k < modernFilesCopy.size(); k++) {
+                        if (modernFiles.get(position).getLocation().equals(modernFilesCopy.get(k).getLocation())) {
+                            onClickVideoListener.onClick(k);
+                            Log.e("matched", "location : " + k);
+                        }
+                    }
                     if (showPopup) {
                         Intent intent = new Intent(mainActivity, FloatingViewService.class);
                         intent.putExtra("index", position);
@@ -178,11 +190,13 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MyViewHolder
             });
         }
     }
-    public interface OnClickVideoListener
-    {
+
+    public interface OnClickVideoListener {
         void onClick(int position);
+
         void onLongClick();
     }
+
     private boolean isMyServiceRunning(Class<?> serviceClass, Context con) {
         ActivityManager manager = (ActivityManager) con
                 .getSystemService(Context.ACTIVITY_SERVICE);
@@ -221,17 +235,17 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.MyViewHolder
         ImageView imageView;
         LinearLayout linearLayoutVideo;
 
-        ImageView vid_previewGrid,moreOption;
-        TextView vidTitle,vidDuration;
+        ImageView vid_previewGrid, moreOption;
+        TextView vidTitle, vidDuration;
+
         public MyViewHolder(View itemView) {
             super(itemView);
-            if(isGridType)
-            {
+            if (isGridType) {
                 vid_previewGrid = (ImageView) itemView.findViewById(R.id.vid_preview);
                 moreOption = (ImageView) itemView.findViewById(R.id.vid_options);
                 vidDuration = (TextView) itemView.findViewById(R.id.vidDuration);
                 vidTitle = (TextView) itemView.findViewById(R.id.vid_title);
-            }else {
+            } else {
                 video_name = (TextView) itemView.findViewById(R.id.video_name);
                 date_files = (TextView) itemView.findViewById(R.id.date_files);
                 duration_textview_files = (TextView) itemView.findViewById(R.id.duration_textview_files);

@@ -3,6 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="comi.example.modern.modernvideopopup.MainActivity">
     <item
+        android:id="@+id/search_bar"
+        android:title="Search"
+        app:actionViewClass="android.widget.SearchView"
+        app:showAsAction="ifRoom|withText" />
+
+    <item
         android:id="@+id/action_viewtype"
         android:icon="@drawable/ic_grid_on_white_24dp"
         android:orderInCategory="100"

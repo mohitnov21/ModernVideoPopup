@@ -3,6 +3,7 @@ package comi.example.modern.modernvideopopup;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -16,6 +17,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -27,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +39,7 @@ import com.jpardogo.android.googleprogressbar.library.GoogleProgressBar;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import comi.example.modern.modernvideopopup.activity.ModernPlayerLandcsape;
 import comi.example.modern.modernvideopopup.adapter.DirectoryAdapter;
@@ -54,17 +58,18 @@ public class MainActivity extends AppCompatActivity implements FilesAdapter.OnCl
     public static MainActivity c;
     RecyclerView directoryRecyclerView;
     Helper helper;
+    public boolean isFiles=false;
     Menu menu;
     GoogleProgressBar mBar;
     boolean isGridType = false;
     boolean isGridTypeFiles = false;
     public SharedPreferences sharedPreferences;
     public SharedPreferences.Editor preferenceEditor;
-
+    private ArrayList<ModernFiles> allVideos;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        isFiles =false;
         setContentView(R.layout.activity_main);
         c = this;
         DataListsSingeton.getInstance().setCurrentActivty(1);
@@ -92,16 +97,17 @@ public class MainActivity extends AppCompatActivity implements FilesAdapter.OnCl
         //  view = (LinearLayout) findViewById(R.id.folder_layout);
         helper = new Helper();
         modernDirectories = new ArrayList<>();
-        if (isWriteStoragePermissionGranted()) {
+     //   if (isWriteStoragePermissionGranted()) {
             //getting SDcard root path
             new LoadDataAsync().execute();
             //   loadData();
 
 
-        }
+      //  }
 
 
     }
+    public SearchView searchView;
 
     public void requestManageOverlayPermission() {
         // first check whether the permission is granted
@@ -274,6 +280,62 @@ public class MainActivity extends AppCompatActivity implements FilesAdapter.OnCl
         // Inflate the menu; this adds items to the action bar if it is present.
         this.menu = menu;
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        MenuItem searchViewItem
+                = menu.findItem(R.id.search_bar);
+        searchView
+                = (SearchView) MenuItemCompat
+                .getActionView(searchViewItem);
+
+        // attach setOnQueryTextListener
+        // to search view defined above
+        searchView.setOnQueryTextListener(
+                new SearchView.OnQueryTextListener() {
+
+                    // Override onQueryTextSubmit method
+                    // which is call
+                    // when submitquery is searched
+
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+                        // If the list contains the search query
+                        // than filter the adapter
+                        // using the filter method
+                        // with the query as its argument
+                        //   if (list.contains(query)) {
+                        filesAdapter.filter(query);
+                       /* }
+                        else {
+                            // Search query not found in List View
+                            Toast
+                                    .makeText(FilesActivity.this,
+                                            "Not found",
+                                            Toast.LENGTH_LONG)
+                                    .show();
+                        }*/
+                        return false;
+                    }
+
+                    // This method is overridden to filter
+                    // the adapter according to a search query
+                    // when the user is typing search
+                    @Override
+                    public boolean onQueryTextChange(String newText) {
+                        if(isFiles)
+                        {
+                            if(filesAdapter==null) {
+                                setUpFilesView();
+                            }
+                            filesAdapter.filter(newText);
+
+                        }else
+                        {
+                            directoryAdapter.filter(newText);
+
+                        }
+                        return false;
+                    }
+                });
+
         return true;
     }
 
@@ -323,24 +385,30 @@ public class MainActivity extends AppCompatActivity implements FilesAdapter.OnCl
                 return true;
 
             case R.id.folders:
+                isFiles=false;
                 setActionIcon(false);
                 return true;
             case R.id.videos:
-                if (modernDirectories != null && modernDirectories.size() > 0) {
-                    isGridTypeFiles = sharedPreferences.getBoolean("is_grid_files", false);
-                    gridLayoutManager = new GridLayoutManager(MainActivity.this, 2);
-
-                    filesAdapter = new FilesAdapter(MainActivity.this, 0, helper.getVideos(),
-                            this, isGridTypeFiles);
-                    directoryRecyclerView.setLayoutManager(isGridTypeFiles ? gridLayoutManager : linearLayoutManager);
-
-                    directoryRecyclerView.setAdapter(filesAdapter);
-                }
+                isFiles=true;
+                setUpFilesView();
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
+    public void setUpFilesView()
+    {
+        if (modernDirectories != null && modernDirectories.size() > 0) {
+            isGridTypeFiles = sharedPreferences.getBoolean("is_grid_files", false);
+            gridLayoutManager = new GridLayoutManager(MainActivity.this, 2);
+               allVideos = new ArrayList<>();
+                 allVideos.addAll(DataListsSingeton.getInstance().getVideosData());
+            filesAdapter = new FilesAdapter(MainActivity.this, 0, allVideos,
+                    this, isGridTypeFiles);
+            directoryRecyclerView.setLayoutManager(isGridTypeFiles ? gridLayoutManager : linearLayoutManager);
 
+            directoryRecyclerView.setAdapter(filesAdapter);
+        }
+    }
     @Override
     public void onClick(int position) {
         //  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -350,6 +418,9 @@ public class MainActivity extends AppCompatActivity implements FilesAdapter.OnCl
                         "Permission needed",
                         getString(R.string.System_permission_dialog_message));
             } else {*/
+        ModernPlayerLandcsape.currentIndex=-1;
+        ModernPlayerLandcsape.relaunchedScreen=false;
+        ModernPlayerLandcsape.flag_fullscreen=false;
 
         Intent intent = new Intent(MainActivity.this, ModernPlayerLandcsape.class);
         intent.putExtra("index", position);
@@ -367,6 +438,31 @@ public class MainActivity extends AppCompatActivity implements FilesAdapter.OnCl
 
     }
 
+    @Override
+    public void onBackPressed() {
+
+        showLeaveMEssage();
+    }
+    public AlertDialog leaveDialog;
+    public void showLeaveMEssage()
+    {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Leaving already?");
+        builder.setNegativeButton("no", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                leaveDialog.dismiss();
+            }
+        });
+        builder.setPositiveButton("yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+        leaveDialog = builder.create();
+        leaveDialog.show();
+    }
     LinearLayoutManager linearLayoutManager;
     GridLayoutManager gridLayoutManager;
 
@@ -389,7 +485,16 @@ public class MainActivity extends AppCompatActivity implements FilesAdapter.OnCl
             //getting SDcard root path
             root = new File(Environment.getExternalStorageDirectory()
                     .getAbsolutePath());
-            helper.getDir1(root, MainActivity.this);
+       //    helper.getDir1(root, MainActivity.this);
+            boolean dataLoadrunning =DataListsSingeton.getInstance().isDataLaoding();
+            while (dataLoadrunning) {
+                dataLoadrunning =DataListsSingeton.getInstance().isDataLaoding();
+                if(!dataLoadrunning)
+                {
+                    break;
+                }
+                Log.e("dataLoadrunning",""+DataListsSingeton.getInstance().isDataLaoding());
+            }
             modernDirectories.addAll(DataListsSingeton.getInstance().getDirectoryData());
 
             return null;

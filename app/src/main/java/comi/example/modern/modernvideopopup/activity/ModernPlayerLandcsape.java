@@ -1,6 +1,6 @@
 package comi.example.modern.modernvideopopup.activity;
 
-import android.annotation.SuppressLint;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -48,11 +48,14 @@ import comi.example.modern.modernvideopopup.R;
 import comi.example.modern.modernvideopopup.Utilities;
 import comi.example.modern.modernvideopopup.VodView;
 import comi.example.modern.modernvideopopup.service.FloatingViewService;
+import comi.example.modern.modernvideopopup.service.NotificationService;
 import comi.example.modern.modernvideopopup.singleton.DataListsSingeton;
+import comi.example.modern.modernvideopopup.util.Constants;
 
 /**
  * Created by Instafeed2 on 11/15/2019.
  */
+import android.widget.FrameLayout.LayoutParams;
 
 public class ModernPlayerLandcsape
         extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener {
@@ -83,7 +86,7 @@ public class ModernPlayerLandcsape
     private GestureDetector bGestureDetector;
     int screenwidth, screenhieght, screenwidthlanscape, screenhieght1;
     int videowidth, videoheight;
-    private ViewGroup.LayoutParams mRootParam;
+    private LayoutParams mRootParam;
     int view_type_video = 0;
     private boolean playerPaused = false;
     public long playerPausedDurationPosition;
@@ -93,15 +96,18 @@ public class ModernPlayerLandcsape
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.landscape_player_layout);
+        Log.e("oncreate","oncreate");
         intent = getIntent();
+        mRootParam = (LayoutParams) findViewById(R.id.root_view).getLayoutParams();
         utilities = new Utilities();
         index = intent.getIntExtra("index", -1);
         index_dir = intent.getIntExtra("index_dir", -1);
         view_type_video = intent.getIntExtra("view_type_video", 0);
+        currentDuration = intent.getIntExtra("cur_pos", 0);
         modernDirectories = new ArrayList<>();
         modernFiles = new ArrayList<>();
         modernDirectories.addAll(DataListsSingeton.getInstance().getDirectoryData());
-        Log.e("FilesActivity outside2", "else count : " + modernDirectories.size());
+        Log.e("view_type_video", "view_type_video : " +view_type_video);
         if (view_type_video == 1) {
             modernFiles.addAll(DataListsSingeton.getInstance().getVideosData());
 
@@ -109,9 +115,10 @@ public class ModernPlayerLandcsape
             modernFiles.addAll(modernDirectories.get(index_dir).getInsideData());
         }
         Log.e("oncreate", "currentIndex" + currentIndex);
-        if (currentIndex == -1)
+        if (currentIndex == -1) {
             currentIndex = index;
-        mRootParam = (ViewGroup.LayoutParams) findViewById(R.id.root_view).getLayoutParams();
+          //  savedCurrentDuration = currentDuration;
+        }
 
         videoView = (VodView) findViewById(R.id.video_popup);
         video_title = (TextView) findViewById(R.id.video_title);
@@ -128,7 +135,6 @@ public class ModernPlayerLandcsape
         //Set the close button
         closeButtonCollapsed = (ImageView) findViewById(R.id.close_btn);
         closeButtonCollapsed.setOnClickListener(new View.OnClickListener() {
-            @SuppressLint("SourceLockedOrientationActivity")
             @Override
             public void onClick(View v) {
                 // Log.e("fullscreen", "else  inisde");
@@ -187,9 +193,23 @@ public class ModernPlayerLandcsape
                 }
                 if (backgroundPlay) {
                     //  videoView.pause();
-                    playAudioinBackGround();
+                    Intent notificationBackService = new Intent(ModernPlayerLandcsape.this, NotificationService.class);
+                    notificationBackService.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                    notificationBackService.putExtra("index", currentIndex);
+                    notificationBackService.putExtra("index_dir", index_dir);
+                    notificationBackService.putExtra("view_type_video", view_type_video);
+                    notificationBackService.putExtra("cur_pos", ((int)currentDuration));
+
+                  /*  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(notificationBackService);
+                    }else
+                    {*/
+                        startService(notificationBackService);
+                   // }
                 }
+                relaunchedScreen = false;
                 finish();
+
                 //     stopSelf();
             }
         });
@@ -268,9 +288,19 @@ public class ModernPlayerLandcsape
                         togglevisibility();
 
                     }
-                } else
+                    if(videoView.isPlaying())
+                    {
+                        playButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_24dp));
+
+                    }
+                } else {
+                  //  playButton.performClick();
+
+                    playButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_arrow_black_24dp));
+
                     Toast.makeText(ModernPlayerLandcsape.this, "" +
                             "Last song.", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -297,7 +327,9 @@ public class ModernPlayerLandcsape
             public void onCompletion(MediaPlayer mp) {
                 if (!repeatON) {
                     relaunchedScreen = false;
-                    nextButton.performClick();
+
+                        nextButton.performClick();
+
                 } else {
                     relaunchedScreen = false;
                     playVideobyItsPosition(currentIndex);
@@ -324,7 +356,7 @@ public class ModernPlayerLandcsape
                 playButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_24dp));
                 videoView.start();
             } else {
-                playButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_play));
+                playButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_arrow_24dp));
 
             }
         } else {
@@ -366,40 +398,8 @@ public class ModernPlayerLandcsape
                     videowidth = mp.getVideoWidth();
                     Log.e("onPrepared ", "videoheight" + videoheight + " videowidth : " + videowidth);
                     videoProportion = (float) videowidth / (float) videoheight;
-               /* if (flag_fullscreen) {
-                    videoheight = screenwidth;
-                    screenwidth = (int) ((float) screenhieght * videoProportion);
-
-                    if (screenwidth > screenhieght) {
-                        screenwidth = screenhieght;
-                        screenhieght = (int) ((float) screenwidth / videoProportion);
-                    }
-
-                    videoView.setFixedVideoSize(screenwidth, screenhieght);
-//                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
-                } else {
                     if (videoheight > videowidth) {
-                        //Log.d("height==", "ld" + "cds");
-                        screenwidth = convertToDp(Portrait_Width);
-
-                        videoheight = (int) ((float) screenwidth / videoProportion);
-                        videoView.setFixedVideoSize(screenwidth, videoheight);
-                    } else {
-
-                        screenwidth = convertToDp(Landscape_width);
-                        // videoheight =
-                        // convertToDp(StaaticVariable.Landscape_Height);
-                        videoheight = (int) ((float) screenwidth / videoProportion);
-                        videoView.setFixedVideoSize(screenwidth, videoheight);
-                        // screenwidth=convertToDp(320);
-
-                    }
-                }*/
-                    if (videoheight > videowidth) {
-//                    flag_fullscreen=true;
-//                    fullscreen_button.performClick();
-                        Log.e("check ", "portrait");
+                      Log.e("check ", "portrait");
                         if (flag_fullscreen) {
                             fullscreen_button.performClick();
 
@@ -412,11 +412,15 @@ public class ModernPlayerLandcsape
                         Log.e("check ", "lscape");
 
                     }
+                    videoView.start();
+                    playButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_24dp));
 
                     //   flag_fullscreen = !flag_fullscreen;
                 } else {
                     currentDuration = savedCurrentDuration;
                     videoView.seekTo((int) currentDuration);
+                    Log.e("flag_fullscreen ", "flag_fullscreen :"+flag_fullscreen+" savedCurrentDuration :"+savedCurrentDuration);
+
                     if (flag_fullscreen) {
                         fullscreen_button.setImageDrawable(getResources().getDrawable(R.drawable.ic_fullscreen_exit_black_24dp));
 
@@ -424,8 +428,19 @@ public class ModernPlayerLandcsape
                         fullscreen_button.setImageDrawable(getResources().getDrawable(R.drawable.ic_fullscreen_black_24dp));
 
                     }
+                    if(playerPaused)
+                    {
+                       // videoView.pause();
+                        playerPaused = false;
+                        playButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_arrow_24dp));
+                    }else
+                    {
+                        videoView.start();
+                    }
                 }
-                videoView.start();
+                repeatON = false;
+                updateRepeat();
+
             }
         });
 
@@ -486,45 +501,6 @@ public class ModernPlayerLandcsape
         return (int) (input * scale + 0.5f);
     }
 
-    @SuppressLint("NewApi")
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // Checks the orientation of the screen
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            //Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-            try {
-                //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
-                //   flag_fullscereen = true;
-                landscape = true;
-                // int width = this.getResources().getDisplayMetrics().widthPixels;
-                //int height = this.getResources().getDisplayMetrics().heightPixels;
-                Display display = getWindowManager().getDefaultDisplay();
-                int width = display.getWidth();
-                int height = display.getHeight();
-                screenwidth = width;
-
-                mRootParam.width = convertToDp(width);
-                mRootParam.height = convertToDp(height);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            // Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
-            try {
-
-                mRootParam.width = screenhieght1;
-                mRootParam.height = screenhieght;
-
-//                actiobar.setVisibility(View.VISIBLE);
-//                actiobar.invalidate();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     private class MyGestureListener1 extends GestureDetector.SimpleOnGestureListener {
         @Override
@@ -629,6 +605,52 @@ public class ModernPlayerLandcsape
                 .getLayoutParams().width * lpa.screenBrightness);
         mOperationPercent.setLayoutParams(lp);
     }
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
+            try {
+                //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+                landscape = true;
+                // int width = this.getResources().getDisplayMetrics().widthPixels;
+                //int height = this.getResources().getDisplayMetrics().heightPixels;
+                Display display = getWindowManager().getDefaultDisplay();
+                int width = display.getWidth();
+                int height = display.getHeight();
+                screenwidth = width;
+
+                mRootParam.width = convertToDp(width);
+                mRootParam.height = convertToDp(height);
+             //   actiobar.setVisibility(View.GONE);
+             //   actiobar.invalidate();
+//	   ActionBar actionBar;
+//	    actionBar = getActionBar();
+//	    actionBar.hide();
+                frame.setLayoutParams(mRootParam);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+             Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+            try {
+
+                mRootParam.width = screenhieght1;
+                mRootParam.height = screenhieght;
+                frame.setLayoutParams(mRootParam);
+//                actiobar.setVisibility(View.VISIBLE);
+//                actiobar.invalidate();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
 
     private class MyScaleGestureListener implements ScaleGestureDetector.OnScaleGestureListener {
         private int mW, mH;
@@ -744,76 +766,6 @@ public class ModernPlayerLandcsape
     }
 
 
-    protected void playAudioinBackGround() {
-
-		/*Log.e("mediaPlayer",
-                "mediaPlayer is"+mediaPlayer+"  and previous_url_service1=="
-						+ previous_url_service4);*/
-
-        mediaPlayer = new MediaPlayer();
-        try {
-            mediaPlayer.setDataSource(modernFiles.get(currentIndex).getLocation());
-            mediaPlayer.prepare();
-        } catch (IllegalArgumentException e) {
-            // TODO Auto-generated catch block
-            //Log.e("DefaulyService", "IllegalArgumentException=="+e);
-            e.printStackTrace();
-        } catch (SecurityException e) {
-            // TODO Auto-generated catch block
-            //Log.e("DefaulyService", "SecurityException=="+e);
-            e.printStackTrace();
-        } catch (IllegalStateException e) {
-            // TODO Auto-generated catch block
-            //Log.e("DefaulyService", "IllegalStateException=="+e);
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            //Log.e("DefaulyService", "IOException=="+e);
-            e.printStackTrace();
-        }
-        //mediaPlayer.setLooping(true);
-        mediaPlayer.seekTo((int) currentDuration);
-        mediaPlayer.start();
-        isMediaPlayerRunning = true;
-        //Log.e("DefaultServ", "mediaPlayer.isPlaying()=="+mediaPlayer.isPlaying());
-        if (!mediaPlayer.isPlaying()) {
-        } else {
-            try {
-               /* if (flag_volume == true) {
-                    mediaPlayer.setVolume(0, 0);
-                }*/
-                if (!videoView.isPlaying()) {
-                    mediaPlayer.pause();
-                }
-            } catch (Exception e) {
-                Log.e("exception", "line 2227" + e.toString());
-
-            }
-            playNotification();
-            foregroundBackNotification(11);
-
-
-            Toast.makeText(getApplicationContext(),
-                    "You can reopen the Popup From Notifications",
-                    Toast.LENGTH_LONG).show();
-
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mediaPlayer) {
-                    mediaPlayer.pause();
-                    mediaPlayer.seekTo(0);
-                    isMediaPlayerRunning = false;
-                    if (repeatON) {
-                        mediaPlayer.start();
-
-                    }
-
-                }
-            });
-        }
-        // TODO Auto-generated method stub
-
-    }
 
     @Override
     public void onProgressChanged(SeekBar arg0, int arg1, boolean arg2) {
@@ -830,20 +782,24 @@ public class ModernPlayerLandcsape
     @Override
     public void onStopTrackingTouch(SeekBar seekbar) {
         // TODO Auto-generated method stub
-        mHandler.removeCallbacks(mUpdateTimeTask);
+       // mHandler.post(mUpdateTimeTask);
         int totalDuration = videoView.getDuration();
         int currentPosition = utilities.progressToTimer(seekbar.getProgress(),
                 totalDuration);
 
         // forward or backward to certain seconds
         videoView.seekTo(currentPosition);
+        currentDuration = videoView.getCurrentPosition();
+        end_pos.setText("" + utilities.milliSecondsToTimer(totalDuration));
+        // Displaying time completed playing
+        initial_pos.setText("" + utilities.milliSecondsToTimer(currentDuration));
 
         // update timer progress again
         updateProgressBar();
     }
 
     public void updateProgressBar() {
-        mHandler.postDelayed(mUpdateTimeTask, 100);
+        mHandler.postDelayed(mUpdateTimeTask, 0);
     }
 
     @Override
@@ -855,11 +811,11 @@ public class ModernPlayerLandcsape
     @Override
     protected void onResume() {
         super.onResume();
-        if (playerPaused) {
-            playerPaused = false;
-            videoView.seekTo((int) playerPausedDurationPosition);
+      //  if (playerPaused) {
+       //     playerPaused = false;
+         //   videoView.seekTo((int) playerPausedDurationPosition);
             Log.e("onResume", "" + playerPausedDurationPosition);
-        }
+       // }
     }
 
     @Override
@@ -867,7 +823,7 @@ public class ModernPlayerLandcsape
         super.onPause();
         playerPaused = true;
         Log.e("onPause", "" + currentDuration);
-        playerPausedDurationPosition = currentDuration;
+        savedCurrentDuration = currentDuration;
         if (videoView.isPlaying()) {
             playButton.performClick();
         }
@@ -973,7 +929,7 @@ public class ModernPlayerLandcsape
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.custom_push);
         contentView.setImageViewResource(R.id.image, R.drawable.vlx_icon);
         contentView.setTextViewText(R.id.title, modernFiles.get(currentIndex).getName());
-        contentView.setTextViewText(R.id.text, "");
+        contentView.setTextViewText(R.id.duration_notify, utilities.milliSecondsToTimer(currentDuration)+"/"+utilities.milliSecondsToTimer(totalDuration));
         contentView.setOnClickPendingIntent(R.id.image, pendingIntent);
 
         Notification notification =

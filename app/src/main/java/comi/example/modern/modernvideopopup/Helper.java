@@ -37,7 +37,7 @@ public class Helper {
     private ArrayList<ModernDirectory> modernDirectories = new ArrayList<>();
     private ArrayList<String> allDirectoryNames = new ArrayList<>();
 
-    public ArrayList<ModernDirectory> getDir1(File dir, MainActivity mainActivity) {
+    public ArrayList<ModernDirectory> getDir1(File dir, Context mainActivity) {
         folders.clear();
         foldersNames = new ArrayList<>();
         dataListsSingeton = DataListsSingeton.getInstance();
@@ -115,7 +115,7 @@ public class Helper {
                     modernDirectory1.addFile(new ModernFiles(id, title
                             , path, duration, mimeType, bMap, date_addded));
                 } else {
-                    modernDirectory = new ModernDirectory(folderName);
+                    modernDirectory = new ModernDirectory(folderName,id);
                     allDirectoryNames.add(folderName);
                     modernDirectory.addFile(new ModernFiles(id, title
                             , path, duration, mimeType, bMap, date_addded));

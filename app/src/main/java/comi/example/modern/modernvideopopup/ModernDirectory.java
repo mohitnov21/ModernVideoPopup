@@ -20,8 +20,9 @@ public class ModernDirectory {
         this.size = size;
     }
 
-    public ModernDirectory(String name) {
+    public ModernDirectory(String name, String id) {
         this.name = name;
+        this.id = id;
     }
 
     public String getSize() {
